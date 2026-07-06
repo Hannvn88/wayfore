@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<title>Wayforé Studio | Web Development &amp; AI Automation</title>
+<meta name="description" content="Wayforé Studio builds premium websites and secure AI automation agents that help small businesses grow online. Hand built, and secure from day one." />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#F6F6F3" />
+<meta name="author" content="Wayforé Studio" />
+<meta name="keywords" content="web development, web design, AI automation, AI agents, chatbots, business automation, secure websites, small business" />
+<!-- Update this to your live URL once deployed -->
+<link rel="canonical" href="https://wayfore.studio/" />
+
+<!-- Open Graph (LinkedIn, Facebook) -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Wayforé Studio" />
+<meta property="og:title" content="Wayforé Studio | Web Development &amp; AI Automation" />
+<meta property="og:description" content="Premium websites and secure AI automation agents that help small businesses grow online. Hand built, and secure from day one." />
+<meta property="og:url" content="https://wayfore.studio/" />
+<meta property="og:image" content="https://wayfore.studio/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Wayforé Studio, web development and AI automation, in a hand drawn blueprint style on off white paper." />
+<meta property="og:locale" content="en_US" />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Wayforé Studio | Web Development &amp; AI Automation" />
+<meta name="twitter:description" content="Premium websites and secure AI automation agents that help small businesses grow online." />
+<meta name="twitter:image" content="https://wayfore.studio/og-image.png" />
+<meta name="twitter:image:alt" content="Wayforé Studio, web development and AI automation." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+<!-- 3D library loaded without blocking render; init runs on DOMContentLoaded -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- Structured data: Organization + ProfessionalService -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://wayfore.studio/#organization",
+      "name": "Wayforé Studio",
+      "alternateName": ["Wayfore Studio", "Way For Studio"],
+      "url": "https://wayfore.studio/",
+      "email": "wayforestudio@gmail.com",
+      "logo": "https://wayfore.studio/og-image.png",
+      "image": "https://wayfore.studio/og-image.png",
+      "description": "Wayforé Studio builds premium, hand crafted websites and secure AI automation agents that help small businesses grow online."
+    },
+    {
+      "@type": "ProfessionalService",
+      "@id": "https://wayfore.studio/#service",
+      "name": "Wayforé Studio",
+      "url": "https://wayfore.studio/",
+      "image": "https://wayfore.studio/og-image.png",
+      "email": "wayforestudio@gmail.com",
+      "priceRange": "$$",
+      "provider": { "@id": "https://wayfore.studio/#organization" },
+      "description": "Custom web development and secure AI automation agents for small businesses. Websites are fast, accessible and hardened against common attacks; AI agents run on scoped, permission based access with encryption, rate limiting and full audit logging.",
+      "serviceType": ["Web Development", "Web Design", "AI Automation", "Business Process Automation", "AI Chatbots"],
+      "areaServed": "Worldwide",
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Wayforé Studio Services",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Web Development",
+              "description": "Custom, hand built websites and web apps that are fast, accessible, mobile ready and built with security in mind."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "AI Automation Agents",
+              "description": "Custom AI agents and automations that answer customers, follow up with leads and move data between tools, wrapped in secure, permission based access."
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+</script>
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<a href="#main" class="skip">Skip to content</a>
+<div class="paper-noise" aria-hidden="true"></div>
+<div class="paper-grid" aria-hidden="true"></div>
+<span class="crop tl" aria-hidden="true"></span><span class="crop tr" aria-hidden="true"></span><span class="crop bl" aria-hidden="true"></span><span class="crop br" aria-hidden="true"></span>
+
+<!-- ============ HEADER / NAV ============ -->
+<header>
+  <div class="wrap nav">
+    <div class="brand">Wayforé Studio <small>est. mmxxv</small></div>
+    <div class="rule" aria-hidden="true"></div>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#services">What we do</a>
+      <a href="#security">Security</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <a href="#contact" class="nav-cta">Start a project</a>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero wrap" id="top" aria-labelledby="hero-title">
+    <div class="reveal">
+      <p class="label">Premium web development &amp; AI automation</p>
+      <h1 id="hero-title">
+        Web development and AI agents that
+        <em class="draw">grow<svg viewBox="0 0 300 12" preserveAspectRatio="none" aria-hidden="true"><path d="M2 8 C 70 2, 150 12, 298 4"/></svg></em>
+        your business.
+      </h1>
+      <p class="lead">
+        Wayforé Studio builds websites that bring in customers, and AI agents that take the
+        repetitive work off your plate. Everything is made by hand and looked after with care,
+        so your business can reach more people and run more smoothly.
+      </p>
+
+      <div class="plain">
+        <span>Websites &amp; web apps</span>
+        <span>AI agents &amp; automation</span>
+      </div>
+
+      <div class="cta-row">
+        <a href="#contact" class="btn btn-ink">Start a project <span class="arrow" aria-hidden="true">&rarr;</span></a>
+        <a href="#services" class="btn btn-line">See what we do</a>
+      </div>
+
+      <div class="hero-meta">
+        <div><b>02</b><span>Ways we help you grow</span></div>
+        <div><b>By hand</b><span>No templates, ever</span></div>
+        <div><b>Secure</b><span>Safe from day one</span></div>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <div class="tilt">
+        <figure class="plate sheet" style="margin:0">
+          <span class="corner tl" aria-hidden="true"></span><span class="corner tr" aria-hidden="true"></span>
+          <span class="corner bl" aria-hidden="true"></span><span class="corner br" aria-hidden="true"></span>
+          <div class="dim" aria-hidden="true"><span class="bar"></span>
+            <i style="left:0"></i><i style="left:25%"></i><i style="left:50%"></i><i style="left:75%"></i><i style="right:0"></i>
+          </div>
+          <canvas id="globe" class="plate-canvas float-sm" role="img"
+            aria-label="A slowly rotating wireframe globe drawn in fine black ink lines, representing a connected network of automated AI agents."></canvas>
+          <figcaption class="plate-cap">
+            <span class="t">fig. 01 · Network study</span>
+            <span class="fig">wireframe on paper</span>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SERVICES ============ -->
+  <section id="services" aria-labelledby="services-title">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="no" aria-hidden="true">I.</span>
+        <h2 id="services-title">What we do</h2>
+        <span class="rule" aria-hidden="true"></span>
+        <span class="fig">two services</span>
+      </div>
+
+      <div class="bento reveal">
+        <!-- Web development -->
+        <article class="tilt panel wide">
+          <div class="sheet">
+            <div class="inner float-sm">
+              <span class="fig">service 01</span>
+              <span class="kicker">Websites &amp; web apps</span>
+              <h3>We build your website.</h3>
+              <p class="what">Custom sites and web apps, with no templates and no page builders.</p>
+              <p>
+                Fast, good looking, and easy to run. We write clean code by hand so your site
+                loads quickly, looks right on every screen, and stays simple to update as you
+                grow. We also build it to hold up against the everyday attacks that target
+                websites, so you can rest easy.
+              </p>
+              <ul class="spec">
+                <li><span class="k" aria-hidden="true"></span>Marketing sites and landing pages</li>
+                <li><span class="k" aria-hidden="true"></span>Web apps and dashboards</li>
+                <li><span class="k" aria-hidden="true"></span>Fast, accessible, mobile ready</li>
+                <li><span class="k" aria-hidden="true"></span>Built with security in mind</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- AI agents -->
+        <article class="tilt panel">
+          <div class="sheet">
+            <div class="inner float-sm">
+              <span class="fig">service 02</span>
+              <span class="kicker">AI agents &amp; automation</span>
+              <h3>We build your AI agents.</h3>
+              <p class="what">Software that quietly does the repetitive work for you.</p>
+              <p>
+                Custom AI agents that reply to customers, follow up with leads, and move
+                information between your tools. They connect through secure access that you
+                control, so they only ever do what you allow.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <!-- How we work -->
+        <article class="tilt panel">
+          <div class="sheet">
+            <div class="inner float-sm">
+              <span class="fig">how we work</span>
+              <span class="kicker">Careful by habit</span>
+              <h3>We measure before we build.</h3>
+              <p>
+                Every agent is scoped, tested, and tried out safely before it touches anything
+                live. We limit what it can reach, set clear limits on what it can do, and keep
+                a record of every action it takes.
+              </p>
+              <ul class="spec">
+                <li><span class="k" aria-hidden="true"></span>You approve anything sensitive</li>
+                <li><span class="k" aria-hidden="true"></span>Every action is logged</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SECURITY ============ -->
+  <section id="security" aria-labelledby="security-title">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="no" aria-hidden="true">II.</span>
+        <h2 id="security-title">Safe to hand your business to</h2>
+        <span class="rule" aria-hidden="true"></span>
+        <span class="fig">security</span>
+      </div>
+
+      <div class="sec-grid">
+        <div class="sec-list reveal">
+          <div class="sec-item">
+            <span class="n" aria-hidden="true">01</span>
+            <div>
+              <h3>Your data stays yours</h3>
+              <p>We keep your information in its own space. It is never mixed with other clients,
+                 and never used to train outside AI models.</p>
+            </div>
+          </div>
+          <div class="sec-item">
+            <span class="n" aria-hidden="true">02</span>
+            <div>
+              <h3>Keys kept under lock</h3>
+              <p>Access keys are stored in a secure vault, given only the access they need, and
+                 refreshed regularly. Nothing is written into the code or shared in plain text.</p>
+            </div>
+          </div>
+          <div class="sec-item">
+            <span class="n" aria-hidden="true">03</span>
+            <div>
+              <h3>Privacy by default</h3>
+              <p>Your information is encrypted while it travels and while it rests, with a clear
+                 policy for how it is handled. We never sell it, and you can ask us to delete it
+                 whenever you like.</p>
+            </div>
+          </div>
+          <div class="sec-item">
+            <span class="n" aria-hidden="true">04</span>
+            <div>
+              <h3>Nothing runs wild</h3>
+              <p>We check every input for anything harmful, limit how often requests can be made,
+                 and give every agent firm limits and an off switch, so it can never run out of
+                 control.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tilt reveal">
+          <div class="badge sheet float-sm">
+            <div>
+              <div class="seal">
+                <svg viewBox="0 0 100 100" fill="none" stroke="var(--line)" stroke-width="1.4" role="img" aria-labelledby="seal-title">
+                  <title id="seal-title">Security first architecture badge</title>
+                  <circle cx="50" cy="50" r="46"/>
+                  <circle cx="50" cy="50" r="38" stroke-dasharray="2 4"/>
+                  <path d="M50 26 L70 36 V54 C70 68 50 76 50 76 C50 76 30 68 30 54 V36 Z" stroke-width="1.8"/>
+                  <path d="M42 51 l6 6 l12 -14" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <p class="fig">Security first, always</p>
+              <p class="stamp">Built to be safe for business.</p>
+            </div>
+            <div class="meta">
+              <div><span>Encryption</span><span>In transit &amp; at rest</span></div>
+              <div><span>Access</span><span>Only what is needed</span></div>
+              <div><span>Sign in</span><span>Secure &amp; scoped</span></div>
+              <div><span>Privacy</span><span>Yours to control</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTACT ============ -->
+  <section id="contact" aria-labelledby="contact-title">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="no" aria-hidden="true">III.</span>
+        <h2 id="contact-title">Start a project</h2>
+        <span class="rule" aria-hidden="true"></span>
+        <span class="fig">get in touch</span>
+      </div>
+
+      <div class="contact reveal">
+        <div class="left">
+          <p class="label">Tell us what you need</p>
+          <h3>A website, an AI agent, or both?</h3>
+          <p>Send us a few lines about your project. We will get back to you with a plan, a clear
+             approach to security, and an honest quote, usually within one working day. No pressure,
+             and no obligation.</p>
+          <p class="sign">Warmly, the team at Wayforé Studio</p>
+        </div>
+        <div class="right">
+          <form id="lead-form" novalidate>
+            <input type="hidden" name="access_key" value="674b597f-8cb5-4e9b-b3d8-eb0da9a0d9a1">
+            <div class="two">
+              <div class="field"><label for="n">Name</label><input id="n" name="name" type="text" placeholder="Your name" autocomplete="name" required></div>
+              <div class="field"><label for="e">Email</label><input id="e" name="email" type="email" placeholder="you@company.com" autocomplete="email" required></div>
+            </div>
+            <div class="field"><label for="s">What you need</label>
+              <select id="s" name="service" required>
+                <option value="" disabled selected>Choose one</option>
+                <option>A website or web app</option>
+                <option>An AI agent or automation</option>
+                <option>Both a website and an AI agent</option>
+                <option>Not sure yet</option>
+              </select>
+            </div>
+            <div class="field"><label for="m">Your project</label>
+              <textarea id="m" name="message" rows="3" placeholder="A sentence or two about what you would like to build or automate." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-ink">Send it over <span class="arrow" aria-hidden="true">&rarr;</span></button>
+            <p class="form-note" id="form-note" aria-live="polite"></p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="brand" style="font-size:1.05rem">Wayforé Studio</div>
+    <nav aria-label="Footer">
+      <a href="#services">What we do</a><a href="#security">Security</a><a href="#contact">Contact</a>
+      <a href="mailto:wayforestudio@gmail.com">wayforestudio@gmail.com</a>
+    </nav>
+    <p class="c">© 2026 Wayforé Studio. Helping small businesses grow online.</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
