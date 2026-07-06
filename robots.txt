@@ -1,0 +1,6 @@
+# Allow all search engines to crawl the whole site
+User-agent: *
+Allow: /
+
+# Location of the sitemap
+Sitemap: https://wayfore.studio/sitemap.xml
