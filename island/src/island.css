@@ -1,0 +1,70 @@
+/* Island-local styles: centre the CardSwap inside the automations drawer and
+   dress the cards to match the parchment/ink site (crisp, no blur-flattening).
+   Loaded after CardSwap.css so these win on equal specificity. */
+
+#automations-root {
+  overflow: hidden;               /* clip the drop/return travel to the drawer */
+}
+
+/* Re-anchor the stack: reactbits pins it bottom-right; we centre it (nudged so
+   the up-right fan of cards sits balanced in the panel). */
+#automations-root .card-swap-container {
+  top: 50%;
+  left: 50%;
+  bottom: auto;
+  right: auto;
+  transform: translate(calc(-50% - 84px), calc(-50% + 92px));
+  transform-origin: center center;
+}
+
+/* At <=1000px main.jsx feeds the stack compact geometry (narrower fan) so it
+   fits a phone-width drawer, and disables autoplay (the scroll-gate steps it).
+   Re-centre for that smaller fan. */
+@media (max-width: 1000px) {
+  #automations-root .card-swap-container {
+    transform: translate(calc(-50% - 41px), calc(-50% + 47px)) scale(0.74);
+  }
+}
+
+/* Card face — the reactbits black card, kept as-is: near-black face, hairline
+   white border, ink-free. Light parchment text so the labels read on black. */
+.card.auto-card {
+  background: #0B0B0B;
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  border-radius: 12px;
+  box-shadow:
+    0 22px 40px -22px rgba(0, 0, 0, 0.65),
+    0 6px 14px -8px rgba(0, 0, 0, 0.45);
+  color: #F3F1EA;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 26px;
+  cursor: pointer;
+  font-family: 'NewYork', Georgia, 'Times New Roman', serif;
+  transition: box-shadow 0.28s ease, transform 0.28s ease;
+}
+.card.auto-card:hover {
+  box-shadow:
+    0 30px 52px -24px rgba(0, 0, 0, 0.72),
+    0 10px 20px -10px rgba(0, 0, 0, 0.5);
+}
+.auto-card .ac-eyebrow {
+  font-size: 0.64rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(243, 241, 234, 0.55);
+}
+.auto-card .ac-title {
+  font-size: 1.7rem;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  margin-top: auto;
+  color: #F6F4EE;
+}
+.auto-card .ac-open {
+  font-size: 0.82rem;
+  font-style: italic;
+  color: rgba(243, 241, 234, 0.72);
+  margin-top: 12px;
+}

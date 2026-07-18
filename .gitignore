@@ -1,0 +1,6 @@
+# Automations island build tooling — source is committed, deps are not
+island/node_modules/
+island/dist/
+node_modules/
+.DS_Store
+*.log
