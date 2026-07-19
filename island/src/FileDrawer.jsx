@@ -56,13 +56,14 @@ export default function FileDrawer({
   // so the cycling feels continuous in either direction.
   const [offset, setOffset] = useState(0);
 
-  // Ref to the scene element, so we can attach a NON-passive wheel
-  // listener. React's built-in onWheel prop is passive by default,
-  // which means calling preventDefault() inside it is silently
-  // ignored and the page would still scroll. Attaching the listener
-  // manually with { passive: false } is what actually lets us stop
-  // the page from moving.
+  // Ref to the scene element. Used to track whether the cursor is
+  // over the drawer right now.
   const sceneRef = useRef(null);
+
+  // Tracks hover state in a ref (not React state) so the window
+  // wheel listener below can read it on every scroll tick without
+  // needing to re-subscribe itself each time it changes.
+  const isHoveringRef = useRef(false);
 
   // Accumulates small wheel deltas (e.g. trackpad ticks) until they
   // cross a threshold, then fires one "step" of cycling. Without
@@ -72,10 +73,28 @@ export default function FileDrawer({
   const WHEEL_STEP_THRESHOLD = 60; // px of accumulated deltaY per step
 
   const handleWheel = useCallback((event) => {
-    // Stop the browser from scrolling the page at all while the
-    // cursor is over the drawer.
+    // Ignore entirely if the cursor isn't over the drawer — let the
+    // page (or the site's section-snap) handle scrolling normally.
+    if (!isHoveringRef.current) return;
+
+    // The site has its own section-snap scrolling, which listens for
+    // wheel events separately from this component. A plain
+    // preventDefault()/stopPropagation() on OUR element only stops
+    // the event from continuing to bubble past us — it does nothing
+    // to a listener that's registered elsewhere (e.g. on the section
+    // container or on window). That's why cycling worked for a
+    // couple of cards and then the page/section still jumped: the
+    // snap listener was seeing the same wheel event we were.
+    //
+    // Fix: this handler is registered on `window` in the CAPTURE
+    // phase (see the addEventListener call below), so it runs before
+    // any bubble-phase listener anywhere in the page — including the
+    // section-snap logic. stopImmediatePropagation() then guarantees
+    // no other listener for this exact event fires at all, no matter
+    // where in the DOM it's attached.
     event.preventDefault();
     event.stopPropagation();
+    event.stopImmediatePropagation();
 
     wheelAccumRef.current += event.deltaY;
 
@@ -94,10 +113,33 @@ export default function FileDrawer({
     const node = sceneRef.current;
     if (!node) return;
 
-    // passive: false is required so preventDefault() inside
-    // handleWheel actually blocks the page scroll.
-    node.addEventListener("wheel", handleWheel, { passive: false });
-    return () => node.removeEventListener("wheel", handleWheel);
+    const setHovering = () => { isHoveringRef.current = true; };
+    const setNotHovering = () => {
+      isHoveringRef.current = false;
+      wheelAccumRef.current = 0; // don't carry a partial step into the next hover
+    };
+
+    // Cheap listeners just to know whether the cursor is over the
+    // drawer right now — these don't need capture or passive:false.
+    node.addEventListener("mouseenter", setHovering);
+    node.addEventListener("mouseleave", setNotHovering);
+
+    // The actual scroll interception happens on `window`, in the
+    // capture phase, with passive:false. Capture phase = runs before
+    // any bubble-phase listener (including a smooth-scroll/snap
+    // library bound to window or a parent section). passive:false is
+    // required or preventDefault() inside handleWheel is silently
+    // ignored and the page/section would still move.
+    window.addEventListener("wheel", handleWheel, {
+      passive: false,
+      capture: true,
+    });
+
+    return () => {
+      node.removeEventListener("mouseenter", setHovering);
+      node.removeEventListener("mouseleave", setNotHovering);
+      window.removeEventListener("wheel", handleWheel, { capture: true });
+    };
   }, [handleWheel]);
   // ---------------------------------------------------------------
 
