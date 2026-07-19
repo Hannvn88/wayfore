@@ -10,6 +10,8 @@
   - All tabs sit on the LEFT side, forming a clean column.
   - Hover / keyboard focus pops a file up with a springy motion
     and sharpens its title.
+  - Scrolling while the cursor is over the drawer CYCLES the files
+    (front file changes) instead of scrolling the page.
 
   To add a file: add one object to the array below. That's it.
     id      - unique string (React key)
@@ -17,6 +19,8 @@
     href    - optional link. Present = the file is an <a>
     accent  - optional tab color (defaults to ink black)
 */
+
+import { useState, useRef, useEffect, useCallback } from "react";
 
 // ---- YOUR FILES LIVE HERE ----------------------------------
 // Add / remove / reorder freely. First entry = front file.
@@ -46,8 +50,63 @@ export default function FileDrawer({
   // Total depth the row occupies, used to center the group
   const rowDepth = (files.length - 1) * spacing;
 
+  // --- Scroll-to-cycle state -----------------------------------
+  // `offset` is how many steps the drawer has been rotated. It can
+  // grow/shrink without bound; we wrap it with modulo when we use it,
+  // so the cycling feels continuous in either direction.
+  const [offset, setOffset] = useState(0);
+
+  // Ref to the scene element, so we can attach a NON-passive wheel
+  // listener. React's built-in onWheel prop is passive by default,
+  // which means calling preventDefault() inside it is silently
+  // ignored and the page would still scroll. Attaching the listener
+  // manually with { passive: false } is what actually lets us stop
+  // the page from moving.
+  const sceneRef = useRef(null);
+
+  // Accumulates small wheel deltas (e.g. trackpad ticks) until they
+  // cross a threshold, then fires one "step" of cycling. Without
+  // this, a single trackpad swipe would spin through many files at
+  // once because trackpads emit dozens of tiny wheel events.
+  const wheelAccumRef = useRef(0);
+  const WHEEL_STEP_THRESHOLD = 60; // px of accumulated deltaY per step
+
+  const handleWheel = useCallback((event) => {
+    // Stop the browser from scrolling the page at all while the
+    // cursor is over the drawer.
+    event.preventDefault();
+    event.stopPropagation();
+
+    wheelAccumRef.current += event.deltaY;
+
+    if (wheelAccumRef.current >= WHEEL_STEP_THRESHOLD) {
+      // Scrolled down enough -> advance to the next file
+      setOffset((prev) => prev + 1);
+      wheelAccumRef.current = 0;
+    } else if (wheelAccumRef.current <= -WHEEL_STEP_THRESHOLD) {
+      // Scrolled up enough -> go back to the previous file
+      setOffset((prev) => prev - 1);
+      wheelAccumRef.current = 0;
+    }
+  }, []);
+
+  useEffect(() => {
+    const node = sceneRef.current;
+    if (!node) return;
+
+    // passive: false is required so preventDefault() inside
+    // handleWheel actually blocks the page scroll.
+    node.addEventListener("wheel", handleWheel, { passive: false });
+    return () => node.removeEventListener("wheel", handleWheel);
+  }, [handleWheel]);
+  // ---------------------------------------------------------------
+
   return (
-    <div className="fd-scene" aria-label="File drawer navigation">
+    <div
+      className="fd-scene"
+      aria-label="File drawer navigation"
+      ref={sceneRef}
+    >
       <style>{`
         /* ---- Palette pulled from the site ----
            paper    #F5F3EE   page background
@@ -68,6 +127,10 @@ export default function FileDrawer({
           border: 1px solid #D9D5CC;     /* hairline plate frame */
           padding: clamp(1rem, 5vw, 2rem);
           box-sizing: border-box;
+          /* Tell the browser this element handles its own scroll
+             gesture, so touch scrolling over it doesn't also try
+             to pan the page vertically. */
+          touch-action: none;
         }
 
         /* Ruler ticks along the top */
@@ -132,6 +195,9 @@ export default function FileDrawer({
                       0 1px 2px rgba(26,25,22,.06),
                       inset 0 1px 0 rgba(255,255,255,.9);
           transform-style: preserve-3d;
+          /* Added `top`/depth to the transition list so cycling
+             (which changes each file's depth slot) animates smoothly
+             instead of jumping instantly to its new position. */
           transition: transform .34s cubic-bezier(.34,1.6,.5,1),
                       box-shadow .34s ease;
           outline: none;
@@ -235,8 +301,19 @@ export default function FileDrawer({
         }}
       >
         {files.map((file, i) => {
-          // Depth slot: i = 0 is the FRONT file (closest to viewer)
-          const depthPos = rowDepth / 2 - i * spacing;
+          // Each file's ORIGINAL index is `i` (stable React key,
+          // stable identity). Its DISPLAY position (front-to-back
+          // slot) is what changes as the user scrolls. We compute
+          // that by shifting `i` by the current offset and wrapping
+          // it into [0, files.length) with modulo, so files cycle
+          // around the loop instead of running off the end.
+          const displayIndex =
+            ((i - offset) % files.length + files.length) % files.length;
+
+          // Depth slot: displayIndex = 0 is the FRONT file (closest
+          // to viewer). This is the only line that changed from
+          // "i" to "displayIndex" to make cycling work.
+          const depthPos = rowDepth / 2 - displayIndex * spacing;
 
           /*
             Resting transform, stored in --rest so the hover rule can
@@ -255,7 +332,9 @@ export default function FileDrawer({
               transform: rest,
               "--rest": rest,
               "--lift": `${lift}px`,
-              zIndex: i + 1, // fallback stacking, 3D depth does the rest
+              // Stacking now follows displayIndex too, so the file
+              // that is visually in front also sits on top.
+              zIndex: files.length - displayIndex,
             },
             children: (
               <>
@@ -266,9 +345,11 @@ export default function FileDrawer({
                   {file.title}
                 </span>
                 <span className="fd-title">{file.title}</span>
-                {/* zero-padded index, e.g. No. 01 */}
+                {/* Shows the file's current position in the stack,
+                    e.g. the front file always reads "No. 01" even
+                    as different files rotate into that slot. */}
                 <span className="fd-No">
-                  No. {String(i + 1).padStart(2, "0")}
+                  No. {String(displayIndex + 1).padStart(2, "0")}
                 </span>
               </>
             ),
