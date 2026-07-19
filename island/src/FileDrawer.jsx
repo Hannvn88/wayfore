@@ -1,436 +1,233 @@
+import React from "react";
+import { createRoot } from "react-dom/client";
+import CardSwap, { Card } from "./CardSwap.jsx";
+import AutomationSheet from "./AutomationSheet.jsx";
+// The island is bundled as one self-contained JS file with no <link> stylesheet
+// on the page (index.html only loads assets/automations.js). Pull the component
+// + island CSS in as strings and inject them at runtime, so the styles ship
+// inside the bundle instead of an orphaned assets/automations.css.
+import cardSwapCss from "./CardSwap.css?inline";
+import islandCss from "./island.css?inline";
+
+if (typeof document !== "undefined") {
+  const style = document.createElement("style");
+  style.setAttribute("data-automations-island", "");
+  style.textContent = `${cardSwapCss}\n${islandCss}`;
+  document.head.appendChild(style);
+}
+
 /*
-  FileDrawer, Wayforé edition
-  ---------------------------
-  Restyled to match the Wayforé Studio site: ivory paper, ink-black
-  serif titles, hairline borders, and "No." plate details like the
-  ruler ticks and italic caption.
-
-  Behavior:
-  - Files stand in a line, viewed from above. No idle motion.
-  - All tabs sit on the LEFT side, forming a clean column.
-  - Hover / keyboard focus pops a file up with a springy motion
-    and sharpens its title.
-  - Scrolling while the cursor is over the drawer CYCLES the files
-    (front file changes) instead of scrolling the page.
-
-  To add a file: add one object to the array below. That's it.
-    id      - unique string (React key)
-    title   - text on the tab and file face
-    href    - optional link. Present = the file is an <a>
-    accent  - optional tab color (defaults to ink black)
+  Automations island
+  ------------------
+  The visual/interaction shell is reactbits' CardSwap (a swapping 3D card stack)
+  feeding the AutomationSheet flow diagram: selecting a card opens the sheet for
+  that automation. Copy is outcome-focused on purpose — it shows what each
+  automation does, never the tools or exact logic behind it.
 */
-
-import { useState, useRef, useEffect, useCallback } from "react";
-
-// ---- YOUR FILES LIVE HERE ----------------------------------
-// Add / remove / reorder freely. First entry = front file.
-const DEFAULT_FILES = [
-  { id: "projects", title: "Projects", href: "#" },
-  { id: "services", title: "Services", href: "#" },
-  { id: "security", title: "Security", href: "#" },
-  { id: "about",    title: "About",    href: "#" },
-  { id: "contact",  title: "Contact" }, // no href yet -> uses onFileOpen
+const AUTOMATIONS = [
+  {
+    id: "booking",
+    title: "AI Booking Agent",
+    summary: "A WhatsApp assistant that books appointments on its own.",
+    flow: [
+      { stage: "TRIGGER", label: "Customer messages the business", detail: "Any WhatsApp message starts this, day or night." },
+      { stage: "PROCESS", label: "Checks real-time availability", detail: "Looks at the calendar before offering a time." },
+      { stage: "ACTION", label: "Confirms a slot", detail: "Books it in and holds the spot." },
+      { stage: "OUTPUT", label: "Reminder sent automatically", detail: "No one has to remember to follow up." },
+    ],
+  },
+  {
+    id: "voice",
+    title: "Voice Call Assistant",
+    summary: "Answers incoming calls when the team can't.",
+    flow: [
+      { stage: "TRIGGER", label: "Call comes in after hours", detail: "Picks up when no one's at the desk." },
+      { stage: "PROCESS", label: "Understands what's needed", detail: "Listens and figures out the request." },
+      { stage: "ACTION", label: "Books or escalates", detail: "Handles routine requests, flags urgent ones." },
+      { stage: "OUTPUT", label: "Team notified either way", detail: "Nothing falls through the cracks overnight." },
+    ],
+  },
+  {
+    id: "leads",
+    title: "Lead Follow-Up",
+    summary: "Reaches out to new leads before they go cold.",
+    flow: [
+      { stage: "TRIGGER", label: "New lead comes in", detail: "From a form, an ad, or a referral." },
+      { stage: "PROCESS", label: "Personalized message drafted", detail: "Written to fit that specific lead." },
+      { stage: "ACTION", label: "Sent within minutes", detail: "Speed matters more than most people think." },
+      { stage: "OUTPUT", label: "Follow-up scheduled if no reply", detail: "Keeps the conversation alive without manual chasing." },
+    ],
+  },
+  {
+    id: "inventory",
+    title: "Order & Inventory Sync",
+    summary: "Keeps stock and records accurate the moment an order lands.",
+    flow: [
+      { stage: "TRIGGER", label: "Order placed", detail: "Starts the moment checkout completes." },
+      { stage: "PROCESS", label: "Inventory checked and updated", detail: "Stock numbers adjust in real time." },
+      { stage: "ACTION", label: "Order logged", detail: "Recorded cleanly, no manual entry." },
+      { stage: "OUTPUT", label: "Owner notified", detail: "A clear summary lands in the inbox, not a spreadsheet to dig through." },
+    ],
+  },
+  {
+    id: "reviews",
+    title: "Review Requests",
+    summary: "Asks happy customers for a review at the right moment.",
+    flow: [
+      { stage: "TRIGGER", label: "Appointment or order completed", detail: "Waits until the job is actually done." },
+      { stage: "PROCESS", label: "Timed to feel natural", detail: "Not sent the second something finishes." },
+      { stage: "ACTION", label: "Review request sent", detail: "A short, easy ask, not a form to fill out." },
+      { stage: "OUTPUT", label: "Feedback collected automatically", detail: "Reviews build up without anyone having to ask in person." },
+    ],
+  },
 ];
-// ------------------------------------------------------------
 
-export default function FileDrawer({
-  files = DEFAULT_FILES,
-  // Called for files WITHOUT an href. Plug in routing/modals later.
-  onFileOpen = (file) => console.log("open file:", file.id),
-  // Caption shown bottom-left of the plate, like the site's figures
-  caption = "No. 02 · Index of files",
-  // Geometry knobs
-  fileWidth = 320,     // base width (px) - scaled responsively via CSS
-  fileHeight = 200,    // base height (px) - scaled responsively via CSS
-  spacing = 52,        // gap between files (px) - scaled responsively via CSS
-  tilt = 42,           // how steeply you look down (deg)
-  lean = 76,           // how far files lean back from vertical (deg)
-  lift = 90,           // how far a hovered file pops up (px)
-}) {
-  // Total depth the row occupies, used to center the group
-  const rowDepth = (files.length - 1) * spacing;
+// Compact geometry on mobile so the whole fanned stack fits inside a phone-width
+// drawer (the desktop stack is wider than a 375px viewport).
+const MOBILE_MQ = "(max-width: 1000px)";
 
-  // --- Scroll-to-cycle state -----------------------------------
-  // `offset` is how many steps the drawer has been rotated. It can
-  // grow/shrink without bound; we wrap it with modulo when we use it,
-  // so the cycling feels continuous in either direction.
-  const [offset, setOffset] = useState(0);
+function AutomationsIsland() {
+  const [openFile, setOpenFile] = React.useState(null);
+  const apiRef = React.useRef(null);   // { step(dir), count } from CardSwap
+  const stepRef = React.useRef(0);     // current front-card index, 0..N-1
+  const openRef = React.useRef(false); // don't gate scroll while the sheet is open
+  React.useEffect(() => {
+    openRef.current = Boolean(openFile);
+  }, [openFile]);
 
-  // Ref to the scene element. Used to track whether the cursor is
-  // over the drawer right now.
-  const sceneRef = useRef(null);
+  const isMobile =
+    typeof window !== "undefined" && window.matchMedia(MOBILE_MQ).matches;
 
-  // Tracks hover state in a ref (not React state) so the window
-  // wheel listener below can read it on every scroll tick without
-  // needing to re-subscribe itself each time it changes.
-  const isHoveringRef = useRef(false);
+  /*
+    Scroll-gate (desktop + mobile)
+    ------------------------------
+    The automations section fills one viewport and the page uses mandatory y
+    scroll-snap. Left alone, a wheel/swipe over the card stack snaps straight to
+    the next section. Instead we capture wheel/touch here and step through the
+    cards, only letting the gesture reach the page (so it snaps to the
+    neighbouring section) once we're at the last card scrolling down, or the
+    first card scrolling up. This runs everywhere now, not just mobile — with
+    autoplay off the scroll gesture is the single driver of the stack, so the
+    front-card index we track here stays in sync with what's shown.
 
-  // Accumulates small wheel deltas (e.g. trackpad ticks) until they
-  // cross a threshold, then fires one "step" of cycling. Without
-  // this, a single trackpad swipe would spin through many files at
-  // once because trackpads emit dozens of tiny wheel events.
-  const wheelAccumRef = useRef(0);
-  const WHEEL_STEP_THRESHOLD = 60; // px of accumulated deltaY per step
+    Touch listeners are attached natively with { passive: false } — that's what
+    lets preventDefault actually stop a touch scroll (React's synthetic touch
+    handlers are passive and can't). Wheel and touch don't always behave the
+    same, so both paths are handled explicitly.
+  */
+  React.useEffect(() => {
+    const section = document.getElementById("automations");
+    if (!section) return;
 
-  const handleWheel = useCallback((event) => {
-    // Ignore entirely if the cursor isn't over the drawer — let the
-    // page (or the site's section-snap) handle scrolling normally.
-    if (!isHoveringRef.current) return;
+    const N = AUTOMATIONS.length;
+    // Must stay >= CardSwap's doStep() animation length, or this unlocks
+    // before that animation's onComplete has fired. When that happens, a new
+    // step() call still increments stepRef here, but CardSwap.doStep() bails
+    // out silently (its own animatingRef guard) with no visual change — so
+    // the tracked index races ahead of what's actually on screen. That's
+    // what caused the gate to release to page-scroll one card early, every
+    // time: doStep's timeline is 0.24s (drop) overlapped with a 0.4s reflow
+    // starting at 0.22s = 0.62s total, longer than the old 520ms cooldown.
+    // 680ms leaves a margin above that 620ms figure for frame-timing jitter.
+    const COOL = 680;       // ms lockout between steps (>= step animation)
+    const STEP_TOUCH = 44;  // px of swipe per card
+    const STEP_WHEEL = 90;  // wheel delta per card
+    let touchY = null;
+    let wheelAccum = 0;
+    let cooling = false;
 
-    // The site has its own section-snap scrolling, which listens for
-    // wheel events separately from this component. A plain
-    // preventDefault()/stopPropagation() on OUR element only stops
-    // the event from continuing to bubble past us — it does nothing
-    // to a listener that's registered elsewhere (e.g. on the section
-    // container or on window). That's why cycling worked for a
-    // couple of cards and then the page/section still jumped: the
-    // snap listener was seeing the same wheel event we were.
-    //
-    // Fix: this handler is registered on `window` in the CAPTURE
-    // phase (see the addEventListener call below), so it runs before
-    // any bubble-phase listener anywhere in the page — including the
-    // section-snap logic. stopImmediatePropagation() then guarantees
-    // no other listener for this exact event fires at all, no matter
-    // where in the DOM it's attached.
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
+    const canDown = () => stepRef.current < N - 1;
+    const canUp = () => stepRef.current > 0;
 
-    wheelAccumRef.current += event.deltaY;
+    const step = dir => {
+      if (cooling) return false;
+      if (dir > 0 ? !canDown() : !canUp()) return false;
+      if (apiRef.current) apiRef.current.step(dir);
+      stepRef.current += dir > 0 ? 1 : -1;
+      cooling = true;
+      setTimeout(() => {
+        cooling = false;
+      }, COOL);
+      return true;
+    };
 
-    if (wheelAccumRef.current >= WHEEL_STEP_THRESHOLD) {
-      // Scrolled down enough -> advance to the next file
-      setOffset((prev) => prev + 1);
-      wheelAccumRef.current = 0;
-    } else if (wheelAccumRef.current <= -WHEEL_STEP_THRESHOLD) {
-      // Scrolled up enough -> go back to the previous file
-      setOffset((prev) => prev - 1);
-      wheelAccumRef.current = 0;
-    }
+    const onWheel = e => {
+      if (openRef.current) return;
+      const dir = e.deltaY > 0 ? 1 : -1;
+      if (dir > 0 ? canDown() : canUp()) {
+        e.preventDefault();   // hold the page while we still have cards to show
+        if (cooling) return;  // mid-step: swallow the delta, don't pile it up
+        wheelAccum += e.deltaY;
+        if (Math.abs(wheelAccum) >= STEP_WHEEL && step(wheelAccum > 0 ? 1 : -1)) {
+          wheelAccum = 0;
+        }
+      } else {
+        wheelAccum = 0; // at a boundary -> let the page's snap take over
+      }
+    };
+
+    const onTouchStart = e => {
+      touchY = e.touches[0].clientY;
+    };
+    const onTouchMove = e => {
+      if (openRef.current || touchY == null) return;
+      const dy = touchY - e.touches[0].clientY; // + = swipe up = advance
+      const dir = dy > 0 ? 1 : -1;
+      if (dir > 0 ? canDown() : canUp()) {
+        e.preventDefault();
+        if (Math.abs(dy) >= STEP_TOUCH && step(dir)) {
+          touchY = e.touches[0].clientY; // reset origin for the next card
+        }
+      }
+      // else: boundary -> do not preventDefault, page scroll-snap handles it
+    };
+    const onTouchEnd = () => {
+      touchY = null;
+    };
+
+    section.addEventListener("wheel", onWheel, { passive: false });
+    section.addEventListener("touchstart", onTouchStart, { passive: true });
+    section.addEventListener("touchmove", onTouchMove, { passive: false });
+    section.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      section.removeEventListener("wheel", onWheel);
+      section.removeEventListener("touchstart", onTouchStart);
+      section.removeEventListener("touchmove", onTouchMove);
+      section.removeEventListener("touchend", onTouchEnd);
+    };
   }, []);
 
-  useEffect(() => {
-    const node = sceneRef.current;
-    if (!node) return;
-
-    // Remembers the page's own overflow setting (if any) so we can
-    // restore it exactly, rather than assuming it was empty.
-    const prevHtmlOverflow = document.documentElement.style.overflow;
-    const prevBodyOverflow = document.body.style.overflow;
-
-    const setHovering = () => {
-      isHoveringRef.current = true;
-      // Belt-and-suspenders: even if some snap listener wins the
-      // event race and we can't stop it from firing, the page
-      // physically cannot scroll while this is set. Covers the
-      // native CSS `scroll-snap-type` case in particular, since that
-      // one isn't driven by a wheel listener at all — it's the
-      // browser's own scroll physics, which our event interception
-      // has no power over.
-      document.documentElement.style.overflow = "hidden";
-      document.body.style.overflow = "hidden";
-    };
-    const setNotHovering = () => {
-      isHoveringRef.current = false;
-      wheelAccumRef.current = 0; // don't carry a partial step into the next hover
-      document.documentElement.style.overflow = prevHtmlOverflow;
-      document.body.style.overflow = prevBodyOverflow;
-    };
-
-    // Cheap listeners just to know whether the cursor is over the
-    // drawer right now — these don't need capture or passive:false.
-    node.addEventListener("mouseenter", setHovering);
-    node.addEventListener("mouseleave", setNotHovering);
-
-    // The actual scroll interception happens on `window`, in the
-    // capture phase, with passive:false. Capture phase = runs before
-    // any bubble-phase listener (including a smooth-scroll/snap
-    // library bound to window or a parent section). passive:false is
-    // required or preventDefault() inside handleWheel is silently
-    // ignored and the page/section would still move.
-    window.addEventListener("wheel", handleWheel, {
-      passive: false,
-      capture: true,
-    });
-
-    return () => {
-      node.removeEventListener("mouseenter", setHovering);
-      node.removeEventListener("mouseleave", setNotHovering);
-      window.removeEventListener("wheel", handleWheel, { capture: true });
-      // Guard against unmounting mid-hover, which would otherwise
-      // leave the page permanently unscrollable.
-      document.documentElement.style.overflow = prevHtmlOverflow;
-      document.body.style.overflow = prevBodyOverflow;
-    };
-  }, [handleWheel]);
-  // ---------------------------------------------------------------
+  const dims = isMobile
+    ? { width: 288, height: 196, cardDistance: 34, verticalDistance: 40, skewAmount: 4 }
+    : { width: 344, height: 232, cardDistance: 48, verticalDistance: 56, skewAmount: 5 };
 
   return (
-    <div
-      className="fd-scene"
-      aria-label="File drawer navigation"
-      ref={sceneRef}
-    >
-      <style>{`
-        /* ---- Palette pulled from the site ----
-           paper    #F5F3EE   page background
-           card     #FBFAF6   file face
-           ink      #1A1916   text, tabs
-           hairline #D9D5CC   borders
-           muted    #8A857A   captions                         */
-
-        .fd-scene {
-          position: relative;
-          width: 100%;
-          min-height: clamp(400px, 100vh, 600px);
-          display: grid;
-          place-items: center;
-          perspective: 1300px;
-          perspective-origin: 50% 12%;   /* eye above the drawer */
-          background: #F5F3EE;
-          border: 1px solid #D9D5CC;     /* hairline plate frame */
-          padding: clamp(1rem, 5vw, 2rem);
-          box-sizing: border-box;
-          /* Tell the browser this element handles its own scroll
-             gesture, so touch scrolling over it doesn't also try
-             to pan the page vertically. */
-          touch-action: none;
-        }
-
-        /* Ruler ticks along the top */
-        .fd-scene::before {
-          content: "";
-          position: absolute;
-          top: clamp(12px, 2vw, 16px);
-          left: clamp(16px, 3vw, 24px);
-          right: clamp(16px, 3vw, 24px);
-          height: clamp(5px, 1vw, 8px);
-          background: repeating-linear-gradient(
-            90deg, #C9BEB3 0 1px, transparent 1px clamp(48px, 10vw, 64px));
-          border-top: 1px solid #C9BEB3;
-          pointer-events: none;
-          opacity: .7;
-        }
-
-        /* Italic serif caption, bottom-left */
-        .fd-caption {
-          position: absolute;
-          bottom: clamp(12px, 2vw, 18px);
-          left: clamp(16px, 3vw, 24px);
-          font: italic 400 clamp(11px, 1.8vw, 13px)/1.3 Georgia, "Times New Roman", serif;
-          color: #9D9289;
-          pointer-events: none;
-          letter-spacing: .01em;
-        }
-
-        /* The drawer floor, tilted away from the viewer */
-        .fd-drawer {
-          position: relative;
-          transform-style: preserve-3d;
-          transform-origin: center center;
-          /* Scale responsively: 0.85x on small screens, 1x at 768px, 1x at 1280px+ */
-          transform: scale(clamp(0.8, (100vw - 300px) / 400px, 1.1));
-        }
-
-        @media (max-width: 640px) {
-          .fd-drawer {
-            transform: scale(0.75);
-          }
-        }
-
-        @media (min-width: 1280px) {
-          .fd-drawer {
-            transform: scale(1.05);
-          }
-        }
-
-        /* One file = paper card with hairline border */
-        .fd-file {
-          position: absolute;
-          left: 50%; top: 50%;
-          display: block;
-          border: 1px solid #D9D5CC;
-          padding: 0;
-          cursor: pointer;
-          text-decoration: none;
-          background: linear-gradient(135deg, #FBFAF6 0%, #F8F5ED 50%, #F3F0E8 100%);
-          border-radius: 6px 6px 3px 3px;
-          box-shadow: 0 2px 4px rgba(26,25,22,.08),
-                      0 1px 2px rgba(26,25,22,.06),
-                      inset 0 1px 0 rgba(255,255,255,.9);
-          transform-style: preserve-3d;
-          /* Depth-slot changes (from cycling) animate smoothly here
-             too, instead of jumping instantly to the new position. */
-          transition: transform .34s cubic-bezier(.34,1.6,.5,1),
-                      box-shadow .34s ease;
-          outline: none;
-          backface-visibility: hidden;
-        }
-
-        /* Pop-out on hover AND keyboard focus */
-        .fd-file:hover,
-        .fd-file:focus-visible {
-          transform: var(--rest)
-                     translateY(calc(var(--lift) * -1))
-                     translateZ(100px)
-                     scale(1.04);
-          box-shadow: 0 20px 40px rgba(26,25,22,.22),
-                      0 8px 16px rgba(26,25,22,.12),
-                      inset 0 1px 0 rgba(255,255,255,.9);
-          z-index: 999;
-        }
-
-        .fd-file:focus-visible {
-          outline: 2px solid #1A1916; /* keyboard focus ring */
-          outline-offset: 3px;
-        }
-
-        /* Tab: ink black, ivory text, ALL on the left side */
-        .fd-tab {
-          position: absolute;
-          top: clamp(-30px, -8vw, -27px);
-          left: clamp(12px, 3vw, 18px);
-          height: clamp(24px, 6vw, 30px);
-          padding: 0 clamp(12px, 2.5vw, 16px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 4px 4px 0 0;
-          font: 700 clamp(9px, 1.5vw, 11px)/1.2 ui-sans-serif, system-ui, sans-serif;
-          letter-spacing: .12em;
-          text-transform: uppercase;
-          color: #F5F3EE;
-          white-space: nowrap;
-          box-shadow: 0 1px 3px rgba(26,25,22,.12);
-          transition: all .3s ease;
-        }
-
-        .fd-file:hover .fd-tab,
-        .fd-file:focus-visible .fd-tab {
-          box-shadow: 0 2px 6px rgba(26,25,22,.16);
-        }
-
-        /* Removed title text on file face for clean look */
-        .fd-title {
-          display: none;
-        }
-
-        /* Small No. number on each file */
-        .fd-No {
-          position: absolute;
-          bottom: clamp(10px, 2vw, 14px);
-          left: clamp(12px, 2.5vw, 16px);
-          font: italic 400 clamp(10px, 1.5vw, 12px)/1.4 Georgia, "Times New Roman", serif;
-          color: #A39F94;
-          letter-spacing: .02em;
-        }
-
-        /* Respect reduced-motion users */
-        @media (prefers-reduced-motion: reduce) {
-          .fd-file, .fd-tab { transition: none; }
-        }
-
-        /* Mobile optimization */
-        @media (max-width: 768px) {
-          .fd-scene {
-            min-height: 450px;
-            perspective: 900px;
-          }
-
-          .fd-file {
-            border-radius: 5px 5px 2px 2px;
-          }
-        }
-
-        /* Tablet and up */
-        @media (min-width: 1024px) {
-          .fd-scene {
-            min-height: 550px;
-            perspective: 1500px;
-          }
-
-          .fd-file {
-            border-radius: 6px 6px 3px 3px;
-          }
-        }
-      `}</style>
-
-      <div
-        className="fd-drawer"
-        style={{
-          width: fileWidth,
-          height: rowDepth + fileHeight,
-          transform: `rotateX(${tilt}deg)`, // tips the drawer floor away
-        }}
+    <React.Fragment>
+      <CardSwap
+        width={dims.width}
+        height={dims.height}
+        cardDistance={dims.cardDistance}
+        verticalDistance={dims.verticalDistance}
+        skewAmount={dims.skewAmount}
+        delay={3600}
+        pauseOnHover={true}
+        easing="elastic"
+        autoplay={false}
+        apiRef={apiRef}
+        onCardClick={i => setOpenFile(AUTOMATIONS[i])}
       >
-        {files.map((file, i) => {
-          // Each file's ORIGINAL index is `i` (stable React key,
-          // stable identity). Its DISPLAY position (front-to-back
-          // slot) is what changes as the user scrolls. We compute
-          // that by shifting `i` by the current offset and wrapping
-          // it into [0, files.length) with modulo, so files cycle
-          // around the loop instead of running off the end.
-          const displayIndex =
-            ((i - offset) % files.length + files.length) % files.length;
-
-          // Depth slot: displayIndex = 0 is the FRONT file (closest
-          // to viewer). This is the only line that changed from
-          // "i" to "displayIndex" to make cycling work.
-          const depthPos = rowDepth / 2 - displayIndex * spacing;
-
-          /*
-            Resting transform, stored in --rest so the hover rule can
-            reuse it and only add the lift + scale on top.
-              1. center on its slot
-              2. slide to its depth slot on the floor
-              3. stand it up, leaning back slightly
-          */
-          const rest = `translate(-50%, -50%) translateY(${depthPos}px) rotateX(-${lean}deg)`;
-
-          const common = {
-            className: "fd-file",
-            style: {
-              width: fileWidth,
-              height: fileHeight,
-              transform: rest,
-              "--rest": rest,
-              "--lift": `${lift}px`,
-              // Stacking now follows displayIndex too, so the file
-              // that is visually in front also sits on top.
-              zIndex: files.length - displayIndex,
-            },
-            children: (
-              <>
-                <span
-                  className="fd-tab"
-                  style={{ background: file.accent ?? "#1A1916" }}
-                >
-                  {file.title}
-                </span>
-                <span className="fd-title">{file.title}</span>
-                {/* Shows the file's current position in the stack,
-                    e.g. the front file always reads "No. 01" even
-                    as different files rotate into that slot. */}
-                <span className="fd-No">
-                  No. {String(displayIndex + 1).padStart(2, "0")}
-                </span>
-              </>
-            ),
-          };
-
-          // Files with an href are real links, the rest are buttons
-          return file.href ? (
-            <a key={file.id} href={file.href} {...common} />
-          ) : (
-            <button
-              key={file.id}
-              type="button"
-              onClick={() => onFileOpen(file)}
-              {...common}
-            />
-          );
-        })}
-      </div>
-    </div>
+        {AUTOMATIONS.map(a => (
+          <Card key={a.id} customClass="auto-card">
+            <span className="ac-eyebrow">Automation</span>
+            <span className="ac-title">{a.title}</span>
+            <span className="ac-open">Open the flow &rarr;</span>
+          </Card>
+        ))}
+      </CardSwap>
+      <AutomationSheet file={openFile} onClose={() => setOpenFile(null)} />
+    </React.Fragment>
   );
 }
+
+const el = document.getElementById("automations-root");
+if (el) createRoot(el).render(<AutomationsIsland />);
