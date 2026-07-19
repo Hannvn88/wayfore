@@ -113,10 +113,28 @@ export default function FileDrawer({
     const node = sceneRef.current;
     if (!node) return;
 
-    const setHovering = () => { isHoveringRef.current = true; };
+    // Remembers the page's own overflow setting (if any) so we can
+    // restore it exactly, rather than assuming it was empty.
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+
+    const setHovering = () => {
+      isHoveringRef.current = true;
+      // Belt-and-suspenders: even if some snap listener wins the
+      // event race and we can't stop it from firing, the page
+      // physically cannot scroll while this is set. Covers the
+      // native CSS `scroll-snap-type` case in particular, since that
+      // one isn't driven by a wheel listener at all — it's the
+      // browser's own scroll physics, which our event interception
+      // has no power over.
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+    };
     const setNotHovering = () => {
       isHoveringRef.current = false;
       wheelAccumRef.current = 0; // don't carry a partial step into the next hover
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
     };
 
     // Cheap listeners just to know whether the cursor is over the
@@ -139,6 +157,10 @@ export default function FileDrawer({
       node.removeEventListener("mouseenter", setHovering);
       node.removeEventListener("mouseleave", setNotHovering);
       window.removeEventListener("wheel", handleWheel, { capture: true });
+      // Guard against unmounting mid-hover, which would otherwise
+      // leave the page permanently unscrollable.
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
     };
   }, [handleWheel]);
   // ---------------------------------------------------------------
@@ -237,9 +259,8 @@ export default function FileDrawer({
                       0 1px 2px rgba(26,25,22,.06),
                       inset 0 1px 0 rgba(255,255,255,.9);
           transform-style: preserve-3d;
-          /* Added `top`/depth to the transition list so cycling
-             (which changes each file's depth slot) animates smoothly
-             instead of jumping instantly to its new position. */
+          /* Depth-slot changes (from cycling) animate smoothly here
+             too, instead of jumping instantly to the new position. */
           transition: transform .34s cubic-bezier(.34,1.6,.5,1),
                       box-shadow .34s ease;
           outline: none;
