@@ -87,31 +87,21 @@ header{position:fixed;top:0;left:0;right:0;z-index:40;backdrop-filter:blur(7px);
 #contact.slide{justify-content:flex-start;padding-top:calc(var(--head-h) + 56px)}
 
 /* ---- HERO -------------------------------------------------------------- */
-.hero-grid{display:grid;grid-template-columns:minmax(170px,0.82fr) minmax(0,520px) minmax(170px,0.82fr);
-  gap:48px;align-items:center}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,520px);
+  gap:64px;align-items:center}
 
-/* left — small text triggers */
-.accordions{display:flex;flex-direction:column;gap:2px}
-.acc{border-bottom:1px solid var(--hair)}
-.acc:first-child{border-top:1px solid var(--hair)}
-.acc summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;
-  gap:1rem;padding:12px 2px;user-select:none}
-.acc summary::-webkit-details-marker{display:none}
-.acc-t{font-size:.9rem;letter-spacing:.06em;color:var(--ink-soft);transition:color .2s}
-.acc[open] .acc-t,.acc summary:hover .acc-t{color:var(--ink)}
-.acc-x{position:relative;width:9px;height:9px;flex:none;color:var(--ink-faint)}
-.acc-x::before,.acc-x::after{content:"";position:absolute;background:currentColor;transition:transform .3s ease,opacity .3s ease}
-.acc-x::before{top:4px;left:0;width:100%;height:1px}
-.acc-x::after{left:4px;top:0;height:100%;width:1px}
-.acc[open] .acc-x::after{transform:scaleY(0);opacity:0}
-.acc-body{overflow:hidden;display:grid;grid-template-rows:0fr;transition:grid-template-rows .34s cubic-bezier(.2,.7,.3,1)}
-.acc[open] .acc-body{grid-template-rows:1fr}
-.acc-body>*{min-height:0}
-.acc-body p{color:var(--ink-2);font-size:.94rem;line-height:1.65;padding:2px 0 14px}
-.acc-body a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--hair)}
-.acc-body a:hover{border-color:var(--line)}
+/* left — headline, clarity strip, body copy */
+.hero-title{font-family:var(--display);font-weight:400;letter-spacing:.01em;line-height:1.06;
+  font-size:clamp(2.2rem,4.6vw,3.5rem);color:var(--ink);margin:0 0 1.6rem;max-width:14ch}
+/* Numbered items read like the figure captions under the globe. */
+.hero-strip{list-style:none;margin:0 0 1.6rem;padding:1rem 0;display:flex;flex-wrap:wrap;
+  gap:.6rem 2.2rem;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+.hero-strip li{display:inline-flex;align-items:baseline;gap:.5rem}
+.hero-strip .n{font-size:.72rem;letter-spacing:.22em;color:var(--ink-faint);font-variant-numeric:tabular-nums}
+.hero-strip .t{font-style:italic;font-size:.9rem;letter-spacing:.02em;color:var(--ink-soft)}
+.hero-body{font-family:var(--body);font-size:1.06rem;line-height:1.6;color:var(--ink-2);max-width:38ch;margin:0}
 
-/* center — sphere plate */
+/* right — sphere plate */
 .hero-center{align-self:center}
 .plate{position:relative;margin:0;padding:16px}
 .plate .corner{position:absolute;width:11px;height:11px;border:1.4px solid var(--line);opacity:.65}
@@ -145,10 +135,6 @@ header{position:fixed;top:0;left:0;right:0;z-index:40;backdrop-filter:blur(7px);
 .vlabel em{font-style:normal;color:var(--ink-soft);margin-left:.15rem}
 .vert.live:hover .vlabel .v-short,.vert.live:focus-visible .vlabel .v-short{display:none}
 .vert.live:hover .vlabel .v-full,.vert.live:focus-visible .vlabel .v-full{display:inline}
-
-/* right — framing line */
-.hero-right{align-self:center}
-.hero-note{font-size:1.16rem;line-height:1.5;color:var(--ink);max-width:20rem;font-style:italic}
 
 /* ---- Section heads ----------------------------------------------------- */
 .sec-head{margin-bottom:40px}
@@ -259,14 +245,16 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 /* ---- Responsive -------------------------------------------------------- */
 @media(max-width:1000px){
   /* Hero sits tight under the header (top-aligned) instead of vertically
-     centred, so there's no gap pushing the accordions down. */
+     centred, so there's no gap pushing the copy down. */
   .hero.slide{justify-content:flex-start;padding-top:calc(var(--head-h) + 12px)}
   .hero-grid{grid-template-columns:1fr;gap:22px;justify-items:center;text-align:center;max-width:460px;margin:0 auto}
-  .hero-center{order:1;width:100%}
-  .hero-right{order:2}
-  .hero-left{order:3;width:100%;max-width:360px}
-  .hero-note{max-width:26rem}
-  .accordions{text-align:left}
+  /* Stack: headline → clarity strip → body copy (all inside .hero-left, in DOM
+     order) → globe. */
+  .hero-left{order:1;width:100%}
+  .hero-center{order:2;width:100%}
+  .hero-title{margin:0 0 1.1rem;max-width:none}
+  .hero-strip{justify-content:center;gap:.5rem 1.6rem;margin-bottom:1.1rem}
+  .hero-body{max-width:36rem;margin:0 auto}
   /* Top-align (like the hero) so the heading sits under the header with no
      vertical-centring gap above it. Also kill the fixed-header double offset:
      the page reserves header height twice on a snapped slide — once via
