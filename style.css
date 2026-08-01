@@ -114,6 +114,16 @@ header{position:fixed;top:0;left:0;right:0;z-index:40;backdrop-filter:blur(7px);
 .plate-cap{margin-top:12px;text-align:center}
 .plate-cap .t{font-family:var(--body);font-style:italic;font-size:.9rem;color:var(--ink-soft);letter-spacing:.02em}
 
+/* margin note — sketchbook aside tucked in the stage's bottom-left corner, the
+   one area no vertex label reaches (the lower vertices are "soon" dots, which
+   carry no label). z-index sits under .verts so a label always wins if the sway
+   ever brings one this far down. */
+.globe-note{position:absolute;left:-10px;bottom:-2px;z-index:2;margin:0;pointer-events:none;
+  display:flex;align-items:flex-end;gap:.3rem;transform:rotate(-4deg);transform-origin:left bottom}
+.globe-note .gn-t{font-family:var(--body);font-style:italic;font-size:.76rem;line-height:1.3;
+  letter-spacing:.01em;color:var(--ink-faint);max-width:7.6rem}
+.globe-note .gn-a{flex:none;width:46px;height:31px;color:var(--ink-faint);opacity:.85;margin-bottom:.15rem}
+
 /* vertices overlay — markers projected onto the sphere each frame by script.js */
 .verts{position:absolute;inset:0;z-index:3;pointer-events:none}
 .vert{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;
@@ -255,6 +265,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
   .hero-title{margin:0 0 1.1rem;max-width:none}
   .hero-strip{justify-content:center;gap:.5rem 1.6rem;margin-bottom:1.1rem}
   .hero-body{max-width:36rem;margin:0 auto}
+  /* Stacked globe is narrower — shrink the margin note so it still clears the
+     sphere's lower-left edge, and keep it left-aligned against the centred column. */
+  .globe-note{left:-6px;bottom:0;gap:.25rem;text-align:left}
+  .globe-note .gn-t{font-size:.7rem;max-width:6.6rem}
+  .globe-note .gn-a{width:36px;height:24px}
   /* Top-align (like the hero) so the heading sits under the header with no
      vertical-centring gap above it. Also kill the fixed-header double offset:
      the page reserves header height twice on a snapped slide — once via
@@ -285,6 +300,9 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
   .wrap{padding:0 20px}
   .slide{min-height:100svh;padding:calc(var(--head-h) + 16px) 0 40px}
   .hero.slide{padding-top:calc(var(--head-h) + 8px)}
+  /* Below ~400px of canvas the note would sit on top of the sphere instead of
+     beside it, and the hero is already vertically tight — drop it. */
+  .globe-note{display:none}
   .auto-copy{padding:0 20px}
   .contact .left,.contact .right{padding:28px}
   .two{grid-template-columns:1fr}
