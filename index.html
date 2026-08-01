@@ -274,8 +274,24 @@
 
 </main>
 
-<script src="script.js"></script>
+<script src="script.js" defer></script>
 <!-- Automations island bundle (React + FileDrawer/AutomationSheet) -->
-<script type="module" src="assets/automations.js"></script>
-</body>
+<script>
+  const automationsSection = document.getElementById('automations');
+  if (automationsSection) {
+    const loadAutomations = () => {
+      const s = document.createElement('script');
+      s.type = 'module';
+      s.src = 'assets/automations.js';
+      document.body.appendChild(s);
+    };
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        loadAutomations();
+        observer.disconnect();
+      }
+    }, { rootMargin: '400px' }); // starts loading 400px before it's visible, so it's ready by the time someone scrolls to it
+    observer.observe(automationsSection);
+  }
+</script></body>
 </html>

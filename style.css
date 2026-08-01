@@ -14,10 +14,10 @@
       url('fonts/Augustus.clean.ttf') format('truetype');
   font-weight:400;font-style:normal;font-display:swap;
 }
-@font-face{
-  font-family:'NewYork';
-  src:url('fonts/NewYork.otf') format('opentype');
-  font-weight:400;font-style:normal;font-display:swap;
+@font-face {
+  font-family: 'New York';
+  src: url('/fonts/NewYork.woff2') format('woff2');
+  font-weight:400;font-style:normal;font-display: swap;
 }
 
 :root{
